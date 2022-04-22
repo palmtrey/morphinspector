@@ -10,6 +10,36 @@ import pandas
 from scipy.stats import wasserstein_distance
 from tqdm import tqdm
 
+class GUISettings():
+  '''
+  Create an object of type GUISettings to define settings
+  for the main application.
+  '''
+  def __init__(
+      self, 
+      morphs_dir:str = '', 
+      stills_dir:str = '', 
+      still_ext:str = '.jpg', 
+      details_cosine_path:str=None, 
+      details_l2_path:str=None, 
+
+      csvs_cosine_path:str=None, 
+      csvs_l2_path:str=None, 
+
+      precision:int=3
+      ):
+    
+    
+    self.morphs_dir = morphs_dir
+    self.stills_dir = stills_dir
+    self.still_ext = still_ext
+    self.details_cosine_path = details_cosine_path
+    self.details_l2_path = details_l2_path
+    self.csvs_cosine_path = csvs_cosine_path
+    self.csvs_l2_path = csvs_l2_path
+    self.precision = precision
+
+
 class Morph():
   '''
   A class for representing a morph and all the data attached to it.

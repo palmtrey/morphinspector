@@ -1,12 +1,15 @@
 import utils
 import widgets
+from pathlib import Path
 import PyQt6.QtCore as QtCore
 import PyQt6.QtWidgets as QtWidgets
 import PyQt6.QtGui as QtGui
 
-class MSWindow(QtWidgets.QMainWindow):
-  def __init__(self, size:QtCore.QSize, precision:int, Morphs:list):
+class MainWindow(QtWidgets.QMainWindow):
+  def __init__(self, size:QtCore.QSize, precision:int, Morphs:list, settings:utils.GUISettings):
     super().__init__()
+
+    self.settings = settings
 
     # Logic setup
     self.precision = precision
@@ -18,12 +21,12 @@ class MSWindow(QtWidgets.QMainWindow):
     self.setWindowTitle("Morph Viewer")
     self.setMinimumSize(self.size.width()//3, self.size.height()//3)
 
-    self.morph_image = widgets.MImageContainer('../images/morphs_renamed/00_0-01_0.png', 'Morph')
+    self.morph_image = widgets.MImageContainer('../resources/placeholder.png', 'Morph')
 
-    self.still1_image = widgets.MImageContainer('../images/stills_renamed/00_0.jpg', 'Still 1')
+    self.still1_image = widgets.MImageContainer('../resources/placeholder.png', 'Still 1')
     self.still1_image.all_stills_pressed.connect(self.all_stills1_pressed)
 
-    self.still2_image = widgets.MImageContainer('../images/stills_renamed/01_0.jpg', 'Still 2')
+    self.still2_image = widgets.MImageContainer('../resources/placeholder.png', 'Still 2')
     self.still2_image.all_stills_pressed.connect(self.all_stills2_pressed)
 
     self.data_label = widgets.DataLabel()
@@ -54,10 +57,46 @@ class MSWindow(QtWidgets.QMainWindow):
     self.widget.setLayout(self.layout)
     self.setCentralWidget(self.widget)
 
-    # Set the first morph
-    self.set_morph(self.Morphs[self.morph_index])
+    if self.Morphs == None:
+      d = QtWidgets.QMessageBox.information(
+          self, 
+          'File Paths', 
+          'Please select a path to a directory containing morphs.',
+          buttons=QtWidgets.QMessageBox.StandardButton.Ok | QtWidgets.QMessageBox.StandardButton.Cancel
+          )
+      
+      if d != QtWidgets.QMessageBox.StandardButton.Ok:
+        exit(1)
+      
+      #self.get_paths()
+      self.get_settings()
 
-    
+    try:
+      # Set the first morph
+      self.set_morph(self.Morphs[self.morph_index])
+    except TypeError:
+      self.exit_error('User did not properly set image paths.')
+
+
+  def get_settings(self) -> utils.GUISettings:
+    result = utils.GUISettings()
+    d = widgets.DetailsDialog(self.size, self.settings)
+    d.exec()
+
+
+
+  def get_paths(self) -> None:
+    self.settings.morphs_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select morphs directory', str(Path.home()))
+    self.settings.stills_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select stills directory', str(Path.home()))
+
+    if self.settings.details_cosine_path != '':
+      d = QtWidgets.QMessageBox.question(self, 'File Paths', 'Would you like to use ' + self.settings.details_cosine_path + ' as your cosine details file?')
+      if d != QtWidgets.QMessageBox.StandardButton.Yes:
+        self.settings.details_cosine_path = QtWidgets.QFileDialog.getOpenFileName(self, 'Select cosine details file', str(Path.home()))
+    else:
+      pass
+
+
   def set_morph(self, morph:utils.Morph) -> None:
     self.morph = morph
     self.morph_image.set_image(self.morph.get_morph_path())
@@ -118,7 +157,11 @@ class MSWindow(QtWidgets.QMainWindow):
   def all_stills2_pressed(self) -> None:
     print('All stills 2 pressed!')
     self.still_window = AllStillsWindow(self.size, self.morph, 2)
-    self.still_window.show()
+    self.still_window.show() 
+
+  def exit_error(self, errstr:str):
+    d = QtWidgets.QMessageBox.critical(self, 'Error', errstr)
+    exit(1)
 
 class AllStillsWindow(QtWidgets.QMainWindow):
   def __init__(self, size:QtCore.QSize, morph:utils.Morph, still_num:int):

@@ -9,8 +9,26 @@
 # Copyright (c) 2022 Cameron M Palmer, campalme@clarkson.edu. All rights reserved.
 
 import gui
+import utils
 
 if __name__ == '__main__':
-  settings = gui.GUISettings('../images/morphs_renamed', '../images/stills_renamed', '.jpg', use_saved_details=True, details_cosine_path='../details_cosine.txt', details_l2_path='../details_l2.txt', precision=4)
+  # settings = gui.GUISettings(
+  #            '../_data/images/morphs_renamed', 
+  #            '../_data/images/stills_renamed', 
+  #            still_ext='.jpg', 
+  #            details_cosine_path='../_data/stats/details_cosine.txt', 
+  #            details_l2_path='../_data/stats/details_l2.txt', 
+  #            precision=4
+  #            )
+
+  settings = utils.GUISettings(
+             morphs_dir='', 
+             stills_dir='', 
+             still_ext='.jpg', 
+             details_cosine_path='../_data/stats/details_cosine.txt', 
+             details_l2_path='../_data/stats/details_l2.txt', 
+             precision=4
+             )
+
   gui = gui.MorphInspectorGUI(settings)
   gui.start()
