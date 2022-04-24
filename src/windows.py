@@ -110,7 +110,8 @@ class MainWindow(QtWidgets.QMainWindow):
     data_string = ''
 
     # Formatting cosine data
-    data_string += 'Cosine Distance Metric:\n'
+    data_string += 'VGG-Face Statistics\n\n'
+    data_string += 'Cosine Distance Metric (VGG-Face threshold 0.4):\n'
     data_string += '  Average Distance: ' + str(round(cosine_data['avgdist'], self.precision)) + '\n'
     data_string += '  Avg distance to ' + self.morph.get_still1() + ': ' + str(round(cosine_data['distanceA'], self.precision)) + '\n'
     data_string += '  Avg distance to ' + self.morph.get_still2() + ': ' + str(round(cosine_data['distanceB'], self.precision)) + '\n'
@@ -118,7 +119,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     data_string += '\n'
 
-    data_string += 'L2 Euclidean Distance Metric:\n'
+    data_string += 'L2 Euclidean Distance Metric (VGG-Face threshold 0.86):\n'
     data_string += '  Average Distance: ' + str(round(l2_data['avgdist'], self.precision)) + '\n'
     data_string += '  Avg distance to ' + self.morph.get_still1() + ': ' + str(round(l2_data['distanceA'], self.precision)) + '\n'
     data_string += '  Avg distance to ' + self.morph.get_still2() + ': ' + str(round(l2_data['distanceB'], self.precision)) + '\n'

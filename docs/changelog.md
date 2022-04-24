@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Allow user to choose their own settings on startup
 * Add Ctrl+W and Ctrl+Q shortcuts to windows & dialogs
 * Speed up startup encapsulation - Morph encapsulation cache working. Startup is now more or less instant after first run with a set of morphs.
+* Remove MorphScore stat and replace with average distance
 
 ### Changed
 

@@ -138,24 +138,24 @@ class Morph():
 
   def get_details(self, type:str) -> dict:
     result = {}
-    result['morphscore'] = self.get_morphscore(type)
+    result['avgdist'] = self.get_avgdist(type)
     result['distanceA'] = self.get_distanceA(type)
     result['distanceB'] = self.get_distanceB(type)
     result['1-wasserstein'] = self.get_emd(type)
     return result
 
-  def get_morphscore(self, type:str) -> float:
+  def get_avgdist(self, type:str) -> float:
     if type == 'cosine':
       if self.details_cosine == None:
         raise TypeError('morph does not contain a cosine morphscore')
       else:
-        return self.details_cosine['morphscore']
+        return self.details_cosine['avgdist']
 
     elif type == 'l2':
       if self.details_l2 == None:
         raise TypeError('morph does not contain an l2 morphscore')
       else:
-        return self.details_l2['morphscore']
+        return self.details_l2['avgdist']
     else:
       raise IndexError(type + ' is not a valid distance metric.')
   
