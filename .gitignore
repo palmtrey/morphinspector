@@ -2,3 +2,4 @@ _data/
 build/
 dist/
 venv/
+src/__pycache__/
