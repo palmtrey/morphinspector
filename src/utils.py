@@ -9,6 +9,10 @@ import os
 import pandas
 from scipy.stats import wasserstein_distance
 from tqdm import tqdm
+from enum import Enum
+import yaml
+import pickle
+import statistics
 
 class GUISettings():
   '''
@@ -20,11 +24,11 @@ class GUISettings():
       morphs_dir:str = '', 
       stills_dir:str = '', 
       still_ext:str = '.jpg', 
-      details_cosine_path:str=None, 
-      details_l2_path:str=None, 
+      details_cosine_path:str='', 
+      details_l2_path:str='', 
 
-      csvs_cosine_path:str=None, 
-      csvs_l2_path:str=None, 
+      csvs_cosine_path:str='', 
+      csvs_l2_path:str='', 
 
       precision:int=3
       ):
@@ -39,6 +43,48 @@ class GUISettings():
     self.csvs_l2_path = csvs_l2_path
     self.precision = precision
 
+  def __str__(self) -> str:
+    result = ''
+    result += 'morphs_dir: ' + self.morphs_dir + '\n'
+    result += 'stills_dir: ' + self.stills_dir + '\n'
+    result += 'still_ext: ' + self.still_ext + '\n'
+    result += 'details_cosine_path: ' + self.details_cosine_path + '\n'
+    result += 'details_l2_path: ' + self.details_l2_path + '\n'
+    result += 'csvs_cosine_path: ' + self.csvs_cosine_path + '\n'
+    result += 'csvs_l2_path: ' + self.csvs_l2_path + '\n'
+    result += 'precision: ' + str(self.precision)
+
+    return result
+
+  def save_config(self) -> None:
+    outputdict = {}
+    outputdict['morphs_dir'] = self.morphs_dir
+    outputdict['stills_dir'] = self.stills_dir
+    outputdict['still_ext'] = self.still_ext
+    outputdict['details_cosine_path'] = self.details_cosine_path
+    outputdict['details_l2_path'] = self.details_l2_path
+    outputdict['csvs_cosine_path'] = self.csvs_cosine_path
+    outputdict['csvs_l2_path'] = self.csvs_l2_path
+    outputdict['precision'] = self.precision
+
+    with open('../resources/config.yml', 'w') as f:
+      yaml.dump(outputdict, f)
+
+  def load_config(self) -> None:
+    if os.path.exists('../resources/config.yml'):
+      with open('../resources/config.yml', 'r') as f:
+        inputdict = yaml.load(f, yaml.Loader)
+
+        self.morphs_dir = inputdict['morphs_dir']
+        self.stills_dir = inputdict['stills_dir']
+        self.still_ext = inputdict['still_ext']
+        self.details_cosine_path = inputdict['details_cosine_path']
+        self.details_l2_path = inputdict['details_l2_path']
+        self.csvs_cosine_path = inputdict['csvs_cosine_path']
+        self.csvs_l2_path = inputdict['csvs_l2_path']
+        self.precision = inputdict['precision']
+    else:
+      report('Config file does not exist. Will retrieve settings from', ReportType.INFO)
 
 class Morph():
   '''
@@ -74,23 +120,21 @@ class Morph():
     self.csv_cosine_path = csv_cosine_path
     self.csv_l2_path = csv_l2_path
 
-    if csv_cosine_path != None:
+    if csv_cosine_path != '':
       self.details_cosine = calc_morphdetails(self.csv_cosine_path, 'VGG-Face_cosine', self.morph_ext)
     elif details_cosine_path != '':
       with open(details_cosine_path) as file:
-        self.details_cosine = json.load(file)
-        self.details_cosine = self.details_cosine[self.get_morph() + '.csv']
+        self.details_cosine = json.load(file)[self.get_morph() + '.csv']
     else:
-      self.details_cosine = None
+      self.details_cosine = ''
 
-    if csv_l2_path != None:
+    if csv_l2_path != '':
       self.details_l2 = calc_morphdetails(self.csv_l2_path, 'VGG-Face_euclidean_l2', self.morph_ext)
     elif details_l2_path != '':
       with open(details_l2_path) as file:
-        self.details_l2 = json.load(file)
-      self.details_l2 = self.details_l2[self.get_morph() + '.csv']
+        self.details_l2 = json.load(file)[self.get_morph() + '.csv']
     else:
-      self.details_l2 = None
+      self.details_l2 = ''
 
   def get_details(self, type:str) -> dict:
     result = {}
@@ -190,18 +234,72 @@ class Morph():
   def get_all_still2(self) -> list:
     return self.all_still2
 
+class ReportType(Enum):
+  INFO = 1
+  WARNING = 2
+  ERROR = 3
 
+def encapsulate_morphs(settings:GUISettings) -> list:
+    '''
+    Takes in the directory where morphs are stored and encapsulates these
+    morphs in the Morph type. Returns a list of all Morph objects.
 
+    If encapsulate_morphs finds a pickled version of morphs under
+    ../resources/cache matching the same path, it will load those
+    instead of re-encapsulating existing morphs to improve startup time.
+    If it does not find this pickled version, it will instead encapsulate
+    the morphs and store a pickled encapsulation under ../resources/cache
+    in the format 'morphs_dir.morphcache'.
+    '''
+
+    # If the settings object does not contain morphs or stills directories,
+    # return None
+    if settings.morphs_dir == '' or settings.stills_dir == '':
+      return None
+
+    morph_cache_file = settings.morphs_dir.replace('/', '_') + '.morphcache'
+
+    # If a pickled cache exists, load the cache and use it.
+    if os.path.exists('../resources/cache/' + morph_cache_file):
+      with open('../resources/cache/' + morph_cache_file, 'rb') as f:
+        return pickle.load(f)
 
 
     
+
+
+    # If a pickled cache does not exist, encapsulate the morphs
+    # (approx. 18 ms per morph)
+    Morphs = []
+
+    print('Preparing morphs for display...')
+    for morph in tqdm(os.listdir(settings.morphs_dir)):
+      try:
+        Morphs.append(Morph(
+          settings.morphs_dir + '/' + morph, 
+          settings.stills_dir, 
+          settings.still_ext, 
+          csv_cosine_path=settings.csvs_cosine_path, 
+          csv_l2_path=settings.csvs_l2_path,
+          details_cosine_path=settings.details_cosine_path,
+          details_l2_path=settings.details_l2_path
+          ))
+      except KeyError:
+        pass
+        #print('KeyError, morph probably not found in existing file. Skipping...')
+
+    # Store the encapsulated morphs as a cache
+    with open('../resources/cache/' + morph_cache_file, 'wb') as f:
+      pickle.dump(Morphs, f)
+
+    return Morphs
+
 def get_stills_from_morph(morph:str) -> list:
   return [morph.split('/')[-1].split('-')[0].split('.')[0], morph.split('/')[-1].split('-')[1].split('.')[0]]
 
-
-def calc_morphscore(morph_csv:str, distance_label:str, morph_ext:str = '.png') -> float:
+def calc_avgdist(morph_csv:str, distance_label:str, morph_ext:str = '.png') -> float:
   '''
-  Calculates a morphscore for a given morph's csv using the MorphScore Equation.
+  Calculates an average distance for a given morph's csv file.
 
   Preconditions:
     - morph_csv is a valid path to a morph's csv file containing still comparisons,
@@ -216,6 +314,9 @@ def calc_morphscore(morph_csv:str, distance_label:str, morph_ext:str = '.png') -
     - morph_csv: a valid path to a morph's csv comparison file
     - morph_ext: the morph's file extension
     - distance_label: the csv file label for distances (ex. 'VGG-Face_cosine', 'VGG-Face_euclidean_l2', etc.)
+
+  Returns:
+    - The average distance from the given morph to both its stills.
   '''
 
   if morph_csv == '':
@@ -241,12 +342,9 @@ def calc_morphscore(morph_csv:str, distance_label:str, morph_ext:str = '.png') -
     else:
       pass
 
-  n = len(identity_1_distances)
-  p = len(identity_2_distances)
+  avgdist = statistics.mean([statistics.mean(identity_1_distances), statistics.mean(identity_2_distances)])
 
-  morphscore = 2 / (1/n * sum(identity_1_distances) + 1/p * sum(identity_2_distances))
-
-  return morphscore
+  return avgdist
 
 def calc_morphdetails(morph_csv:str, distance_label:str, morph_ext:str = '.png') -> dict:
   '''
@@ -289,17 +387,16 @@ def calc_morphdetails(morph_csv:str, distance_label:str, morph_ext:str = '.png')
       pass
 
   result = {}
-  result['morphscore'] = calc_morphscore(morph_csv, distance_label, morph_ext)
+  result['avgdist'] = calc_avgdist(morph_csv, distance_label, morph_ext)
   result['distanceA'] = np.mean(identity_1_distances)
   result['distanceB'] = np.mean(identity_2_distances)
   result['1-wasserstein'] = wasserstein_distance(identity_1_distances, identity_2_distances)
 
   return result
 
-
 def writescores(morph_csvs_dir:str, output_file:str, distance_label:str) -> None:
   '''
-  Writes MorphScores for all morphs csvs stored in morph_csvs_dir to an output file, output_file (a txt file)
+  Writes morph details for all morphs csvs stored in morph_csvs_dir to an output file, output_file (a txt file)
 
   Preconditions: 
     - morphs_csvs_dir is a valid directory containing validly formatted csvs
@@ -317,105 +414,14 @@ def writescores(morph_csvs_dir:str, output_file:str, distance_label:str) -> None
         L2 euclidian: 'VGG-Face_euclidean_l2'
   '''
 
-  scores = {}
+  details = {}
   for csv in tqdm(os.listdir(morph_csvs_dir)):
-    scores[csv] = calc_morphdetails(morph_csvs_dir + '/' + csv, distance_label)
+    details[csv] = calc_morphdetails(morph_csvs_dir + '/' + csv, distance_label)
 
   with open(output_file, 'w') as file:
-    file.write(json.dumps(scores))
-
-
-def plotscores(scores_file:str) -> None:
-  '''
-  Plots a histogram of MorphScores, given a MorphScore .txt file
-
-  Preconditions:
-    - scores_file is the path to a valid .txt morphscores file created with writescores()
+    file.write(json.dumps(details))
   
-  Postconditions:
-    - None
-
-  Parameters:
-    - scores_file: the morphscores file to use
-  '''
-
-  scores = {}
-  with open(scores_file) as file:
-    scores = json.load(file)
-  
-
-  plt.hist(scores.values(), bins=100)
-  plt.show()
-
-def show_morphs(morphs_dir:str, stills_dir:str, scores_file:str, ms_threshold:float=0.0, still_ext:str='.jpg'):
-  '''
-  Iterates through morphs, showing a morph and its composite stills, along with its morph score beneath
-
-  Preconditions:
-    - morphs_dir and stills_dir are valid directories containing morphs and stills
-    - stills use the extension still_ext, which defaults to '.jpg'
-    - scores_file is the path to a valid .txt morphscores file created with writescores()
-
-  Postconditions:
-    - None
-  
-  Parameters:
-    - morphs_dir: the directory containing morphs
-    - stills_dir: the directory containing stills
-    - scores_file: the path to a .txt morphscores file
-    - ms_threshold: the low-end threshold to display. For example, a value of ms_threshold = 1.0
-      will only display morphs with a morphscore higher than 1.0.
-    - still_ext: the file extension used by the still images
-  '''
-
-  scores = {}
-  with open(scores_file) as file:
-    scores = json.load(file)
-
-
-  for morph in os.listdir(morphs_dir):
-    
-    try:
-      score = round(scores[morph + '.csv'], 3)
-    except KeyError:
-      print("KeyError encountered. Skipping morph...")
-    if score < ms_threshold:
-      continue
-
-    f = plt.figure(morph)
-    ax = np.zeros(3, dtype=object)
-
-    spec = gridspec.GridSpec(ncols=2, nrows=2)
-
-    ax[0] = f.add_subplot(spec[0, 0:])
-    ax[1] = f.add_subplot(spec[1, 0])
-    ax[2] = f.add_subplot(spec[1, 1])
-    still_1 = morph.split('-')[0]
-    still_2 = morph.split('-')[1].split('.')[0]
-    morph_img = mpimg.imread(morphs_dir + '/' + morph)
-    still_1_img = mpimg.imread(stills_dir + '/' + still_1 + still_ext)
-    still_2_img = mpimg.imread(stills_dir + '/' + still_2 + still_ext)
-
-    for a in ax:
-      a.set_yticklabels([])
-      a.set_xticks([])
-      a.set_xticklabels([])
-      a.set_yticks([])
-
-    ax[0].imshow(morph_img)
-    ax[1].imshow(still_1_img)
-    ax[2].imshow(still_2_img)
-
-    placeholder = 5.00
-    ax[0].title.set_text(morph + ', MorphScore: ' + str(score) + '\n' + 'Average distance to identities (1 / MorphScore): ' + str(round(1/scores[morph + '.csv'], 3)))
-    ax[1].set_xlabel(still_1 + still_ext)
-    ax[2].set_xlabel(still_2 + still_ext)
-
-
-    plt.show()
-  
-
-def plot_wasserstein(morph_details_file:str):
+def plot_wasserstein(morph_details_file:str) -> None:
   details = {}
   with open(morph_details_file) as file:
     details = json.load(file)
@@ -458,22 +464,31 @@ def plot_wasserstein(morph_details_file:str):
   plt.hist(yM, bins=100)
   plt.show()
 
-
-def write_details_to_csv(morph_details_file:str, csv_out_file:str):
-  csv_out = 'File Name, MorphScore, distance A, distance B, 1-wasserstein\n'
+def write_details_to_csv(morph_details_file:str, csv_out_file:str) -> None:
+  csv_out = 'File Name, average distance, distance A, distance B, 1-wasserstein\n'
 
   details = {}
   with open(morph_details_file) as f:
     details = json.load(f)
   
   for key in details.keys():
-    csv_out += key + ',' + str(details[key]['morphscore']) + ',' + str(details[key]['distanceA']) + ',' + str(details[key]['distanceB']) + ',' + str(details[key]['1-wasserstein']) + '\n'
+    csv_out += key + ',' + str(details[key]['avgdist']) + ',' + str(details[key]['distanceA']) + ',' + str(details[key]['distanceB']) + ',' + str(details[key]['1-wasserstein']) + '\n'
 
   with open(csv_out_file, 'w') as f:
     f.write(csv_out)
 
-    
+def report(message, type:ReportType) -> None:
+  prefix = ''
+  message = str(message).split('\n')
+  if type == ReportType.INFO:
+    prefix = '[INFO] '
+  elif type == ReportType.WARNING:
+    prefix = '[WARNING] '
+  else: # type == ReportType.ERROR
+    prefix = '[ERROR] '
 
+  for line in message:
+    print(prefix + line)
 
 
 

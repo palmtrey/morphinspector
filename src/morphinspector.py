@@ -12,15 +12,6 @@ import gui
 import utils
 
 if __name__ == '__main__':
-  # settings = gui.GUISettings(
-  #            '../_data/images/morphs_renamed', 
-  #            '../_data/images/stills_renamed', 
-  #            still_ext='.jpg', 
-  #            details_cosine_path='../_data/stats/details_cosine.txt', 
-  #            details_l2_path='../_data/stats/details_l2.txt', 
-  #            precision=4
-  #            )
-
   settings = utils.GUISettings(
              morphs_dir='', 
              stills_dir='', 

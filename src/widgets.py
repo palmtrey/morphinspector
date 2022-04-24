@@ -4,6 +4,7 @@ import PyQt6.QtCore as QtCore
 import PyQt6.QtGui as QtGui
 import PyQt6.QtWidgets as QtWidgets
 import windows
+from pathlib import Path
 
 class DataLabel(QtWidgets.QLabel):
   def __init__(self):
@@ -108,37 +109,55 @@ class DetailsDialog(QtWidgets.QDialog):
 
     self.settings = settings
     self.setMinimumSize(size.width()//4, size.height()//4)
-
+    self.setWindowTitle('Morph Inspector Settings')
 
     self.morphs_dir_label = QtWidgets.QLabel(self)
     self.morphs_dir_label.setText('Morphs directory: ')
     self.morphs_dir_line = QtWidgets.QLineEdit(self)
     self.morphs_dir_line.setText(self.settings.morphs_dir)
+    self.morphs_dir_bt = QtWidgets.QPushButton(self)
+    self.morphs_dir_bt.setText('Search')
+    self.morphs_dir_bt.clicked.connect(lambda: self.get_file('morphs_dir'))
 
     self.stills_dir_label = QtWidgets.QLabel(self)
     self.stills_dir_label.setText('Stills directory: ')
     self.stills_dir_line = QtWidgets.QLineEdit(self)
     self.stills_dir_line.setText(self.settings.stills_dir)
+    self.stills_dir_bt = QtWidgets.QPushButton(self)
+    self.stills_dir_bt.setText('Search')
+    self.stills_dir_bt.clicked.connect(lambda: self.get_file('stills_dir'))
 
     self.details_cosine_label = QtWidgets.QLabel(self)
-    self.details_cosine_label.setText('VGG-Face Cosine details file:   ')
+    self.details_cosine_label.setText('VGG-Face Cosine details file: ')
     self.details_cosine_line = QtWidgets.QLineEdit(self)
     self.details_cosine_line.setText(self.settings.details_cosine_path)
+    self.details_cosine_bt = QtWidgets.QPushButton(self)
+    self.details_cosine_bt.setText('Search')
+    self.details_cosine_bt.clicked.connect(lambda: self.get_file('details_cosine'))
 
     self.details_l2_label = QtWidgets.QLabel(self)
-    self.details_l2_label.setText('VGG-Face L2 details file:       ')
+    self.details_l2_label.setText('VGG-Face L2 details file: ')
     self.details_l2_line = QtWidgets.QLineEdit(self)
     self.details_l2_line.setText(self.settings.details_l2_path)
+    self.details_l2_bt = QtWidgets.QPushButton(self)
+    self.details_l2_bt.setText('Search')
+    self.details_l2_bt.clicked.connect(lambda: self.get_file('details_l2'))
 
     self.csvs_cosine_label = QtWidgets.QLabel(self)
     self.csvs_cosine_label.setText('VGG-Face Cosine CSVs directory: ')
     self.csvs_cosine_line = QtWidgets.QLineEdit(self)
     self.csvs_cosine_line.setText(self.settings.csvs_cosine_path)
+    self.csvs_cosine_bt = QtWidgets.QPushButton(self)
+    self.csvs_cosine_bt.setText('Search')
+    self.csvs_cosine_bt.clicked.connect(lambda: self.get_file('csvs_cosine'))
 
     self.csvs_l2_label = QtWidgets.QLabel(self)
     self.csvs_l2_label.setText('VGG-Face L2 CSVs directory: ')
     self.csvs_l2_line = QtWidgets.QLineEdit(self)
     self.csvs_l2_line.setText(self.settings.csvs_l2_path)
+    self.csvs_l2_bt = QtWidgets.QPushButton(self)
+    self.csvs_l2_bt.setText('Search')
+    self.csvs_l2_bt.clicked.connect(lambda: self.get_file('csvs_l2'))
 
     self.precision_label = QtWidgets.QLabel(self)
     self.precision_label.setText('Precision (integer): ')
@@ -152,21 +171,27 @@ class DetailsDialog(QtWidgets.QDialog):
     self.layout = QtWidgets.QGridLayout()
     self.layout.addWidget(self.morphs_dir_label, 0, 0)
     self.layout.addWidget(self.morphs_dir_line, 0, 1, 1, 2)
+    self.layout.addWidget(self.morphs_dir_bt, 0, 3)
 
     self.layout.addWidget(self.stills_dir_label, 1, 0)
     self.layout.addWidget(self.stills_dir_line, 1, 1, 1, 2)
+    self.layout.addWidget(self.stills_dir_bt, 1, 3)
 
     self.layout.addWidget(self.details_cosine_label, 2, 0)
     self.layout.addWidget(self.details_cosine_line, 2, 1, 1, 2)
+    self.layout.addWidget(self.details_cosine_bt, 2, 3)
 
     self.layout.addWidget(self.details_l2_label, 3, 0)
     self.layout.addWidget(self.details_l2_line, 3, 1, 1, 2)
+    self.layout.addWidget(self.details_l2_bt, 3, 3)
 
     self.layout.addWidget(self.csvs_cosine_label, 4, 0)
     self.layout.addWidget(self.csvs_cosine_line, 4, 1, 1, 2)
+    self.layout.addWidget(self.csvs_cosine_bt, 4, 3)
 
     self.layout.addWidget(self.csvs_l2_label, 5, 0)
     self.layout.addWidget(self.csvs_l2_line, 5, 1, 1, 2)
+    self.layout.addWidget(self.csvs_l2_bt, 5, 3)
 
     self.layout.addWidget(self.precision_label, 6, 0)
     self.layout.addWidget(self.precision_line, 6, 1, 1, 2)
@@ -176,4 +201,38 @@ class DetailsDialog(QtWidgets.QDialog):
     self.setLayout(self.layout)
 
   def confirm_clicked(self):
-    pass
+    self.settings.morphs_dir = self.morphs_dir_line.text()
+    self.settings.stills_dir = self.stills_dir_line.text()
+    self.close()
+
+  def get_file(self, data:str):
+    path = str(QtWidgets.QFileDialog.getExistingDirectory(self, str(Path.home())))
+
+    if data == 'morphs_dir':
+      self.settings.morphs_dir = path
+    elif data == 'stills_dir':
+      self.settings.stills_dir = path
+    elif data == 'details_cosine':
+      self.settings.details_cosine_path = path
+    elif data == 'details_l2':
+      self.settings.details_l2_path = path
+    elif data == 'csvs_cosine':
+      self.settings.csvs_cosine_path = path
+    elif data == 'csvs_l2':
+      self.settings.csvs_l2_path = path
+    else:
+      pass
+      
+    self.update_lines()
+
+  def update_lines(self):
+    self.morphs_dir_line.setText(self.settings.morphs_dir)
+    self.stills_dir_line.setText(self.settings.stills_dir)
+    self.details_cosine_line.setText(self.settings.details_cosine_path)
+    self.details_l2_line.setText(self.settings.details_l2_path)
+    self.csvs_cosine_line.setText(self.settings.csvs_cosine_path)
+    self.csvs_l2_line.setText(self.settings.csvs_l2_path)
+
+  def execr(self) -> utils.GUISettings:
+    self.exec()
+    return self.settings

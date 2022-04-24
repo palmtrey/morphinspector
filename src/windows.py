@@ -17,6 +17,10 @@ class MainWindow(QtWidgets.QMainWindow):
     self.morph_index = 0
 
     # Window GUI setup
+
+    QtGui.QShortcut(QtGui.QKeySequence('Ctrl+W'), self).activated.connect(self.close)
+    QtGui.QShortcut(QtGui.QKeySequence('Ctrl+Q'), self).activated.connect(exit)
+
     self.size = size
     self.setWindowTitle("Morph Viewer")
     self.setMinimumSize(self.size.width()//3, self.size.height()//3)
@@ -57,6 +61,9 @@ class MainWindow(QtWidgets.QMainWindow):
     self.widget.setLayout(self.layout)
     self.setCentralWidget(self.widget)
 
+    # If the GUI object was not able to create morphs using the default
+    # settings loaded, the user will be prompted to enter their settings
+    # here.
     if self.Morphs == None:
       d = QtWidgets.QMessageBox.information(
           self, 
@@ -68,33 +75,25 @@ class MainWindow(QtWidgets.QMainWindow):
       if d != QtWidgets.QMessageBox.StandardButton.Ok:
         exit(1)
       
-      #self.get_paths()
-      self.get_settings()
+      self.settings = self.get_settings()
+      self.settings.save_config()
+
+      utils.report(self.settings, utils.ReportType.INFO)
+
+      self.Morphs = utils.encapsulate_morphs(self.settings)
 
     try:
       # Set the first morph
       self.set_morph(self.Morphs[self.morph_index])
     except TypeError:
-      self.exit_error('User did not properly set image paths.')
+      self.exit_error('User did not properly set image paths. Exiting.')
 
 
   def get_settings(self) -> utils.GUISettings:
-    result = utils.GUISettings()
     d = widgets.DetailsDialog(self.size, self.settings)
-    d.exec()
+    result:utils.GUISettings = d.execr()
+    return result
 
-
-
-  def get_paths(self) -> None:
-    self.settings.morphs_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select morphs directory', str(Path.home()))
-    self.settings.stills_dir = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select stills directory', str(Path.home()))
-
-    if self.settings.details_cosine_path != '':
-      d = QtWidgets.QMessageBox.question(self, 'File Paths', 'Would you like to use ' + self.settings.details_cosine_path + ' as your cosine details file?')
-      if d != QtWidgets.QMessageBox.StandardButton.Yes:
-        self.settings.details_cosine_path = QtWidgets.QFileDialog.getOpenFileName(self, 'Select cosine details file', str(Path.home()))
-    else:
-      pass
 
 
   def set_morph(self, morph:utils.Morph) -> None:
@@ -112,17 +111,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Formatting cosine data
     data_string += 'Cosine Distance Metric:\n'
-    data_string += '  MorphScore: ' + str(round(cosine_data['morphscore'], self.precision)) + '\n'
-    data_string += '  1/MorphScore: ' + str(round(1 / cosine_data['morphscore'], self.precision)) + '\n'
+    data_string += '  Average Distance: ' + str(round(cosine_data['avgdist'], self.precision)) + '\n'
     data_string += '  Avg distance to ' + self.morph.get_still1() + ': ' + str(round(cosine_data['distanceA'], self.precision)) + '\n'
     data_string += '  Avg distance to ' + self.morph.get_still2() + ': ' + str(round(cosine_data['distanceB'], self.precision)) + '\n'
-    data_string += '  1-Wasserstein (EMD) distance between above: ' + str(round(cosine_data['1-wasserstein'], self.precision)) + '\n'
+    data_string += '  1-Wasserstein (earth mover) distance between above: ' + str(round(cosine_data['1-wasserstein'], self.precision)) + '\n'
 
     data_string += '\n'
 
     data_string += 'L2 Euclidean Distance Metric:\n'
-    data_string += '  MorphScore: ' + str(round(l2_data['morphscore'], self.precision)) + '\n'
-    data_string += '  1/MorphScore: ' + str(round(1 / l2_data['morphscore'], self.precision)) + '\n'
+    data_string += '  Average Distance: ' + str(round(l2_data['avgdist'], self.precision)) + '\n'
     data_string += '  Avg distance to ' + self.morph.get_still1() + ': ' + str(round(l2_data['distanceA'], self.precision)) + '\n'
     data_string += '  Avg distance to ' + self.morph.get_still2() + ': ' + str(round(l2_data['distanceB'], self.precision)) + '\n'
     data_string += '  1-Wasserstein (earth mover) distance between above: ' + str(round(l2_data['1-wasserstein'], self.precision)) + '\n'
@@ -150,12 +147,10 @@ class MainWindow(QtWidgets.QMainWindow):
     self.set_morph(self.Morphs[self.morph_index])
 
   def all_stills1_pressed(self) -> None:
-    print('All stills 1 pressed!')
     self.still_window = AllStillsWindow(self.size, self.morph, 1)
     self.still_window.show()
 
   def all_stills2_pressed(self) -> None:
-    print('All stills 2 pressed!')
     self.still_window = AllStillsWindow(self.size, self.morph, 2)
     self.still_window.show() 
 
@@ -166,6 +161,10 @@ class MainWindow(QtWidgets.QMainWindow):
 class AllStillsWindow(QtWidgets.QMainWindow):
   def __init__(self, size:QtCore.QSize, morph:utils.Morph, still_num:int):
     super().__init__()
+
+    QtGui.QShortcut(QtGui.QKeySequence('Ctrl+W'), self).activated.connect(self.close)
+    QtGui.QShortcut(QtGui.QKeySequence('Ctrl+Q'), self).activated.connect(exit)
+
     self.size = size
     self.morph = morph
     self.stills_dir = morph.get_stills_dir()
@@ -181,9 +180,6 @@ class AllStillsWindow(QtWidgets.QMainWindow):
       self.stills = morph.get_all_still2()
     else:
       raise ValueError('still_num in AllStillsWindow initializer must be either 1 or 2.')
-
-    print('All stills: ' + str(self.stills))
-    print('Stills dir: ' + morph.get_stills_dir())
 
     self.size = size
     self.setWindowTitle('All stills for ' + str(self.still))
