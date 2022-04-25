@@ -3,3 +3,5 @@ build/
 dist/
 venv/
 src/__pycache__/
+resources/cache/
+resources/config.yml
