@@ -4,6 +4,9 @@ A GUI application for inspecting face morphs created by Clarkson University's CA
 ## Background
 Face morphs are created through the use of neural networks for the purpose of fooling facial recognition engines (FREs). Research is being conducted at multiple universities across the United States to create high-quality face morphs for the purpose of training a defensive neural network to detect these morphs. Morph Inspector provides statistics, analysis, and visual inspection of created morphs.
 
+## Changelog
+A changelog of all versions can be found [here](https://github.com/palmtrey/morphinspector/blob/main/docs/changelog.md).
+
 ## Installation
 Morph Inspector is still under development - installation instructions to come.
 
