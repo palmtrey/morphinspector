@@ -117,7 +117,7 @@ class DetailsDialog(QtWidgets.QDialog):
     self.morphs_dir_line.setText(self.settings.morphs_dir)
     self.morphs_dir_bt = QtWidgets.QPushButton(self)
     self.morphs_dir_bt.setText('Search')
-    self.morphs_dir_bt.clicked.connect(lambda: self.get_file('morphs_dir'))
+    self.morphs_dir_bt.clicked.connect(lambda: self.get_dir('morphs_dir'))
 
     self.stills_dir_label = QtWidgets.QLabel(self)
     self.stills_dir_label.setText('Stills directory: ')
@@ -125,7 +125,7 @@ class DetailsDialog(QtWidgets.QDialog):
     self.stills_dir_line.setText(self.settings.stills_dir)
     self.stills_dir_bt = QtWidgets.QPushButton(self)
     self.stills_dir_bt.setText('Search')
-    self.stills_dir_bt.clicked.connect(lambda: self.get_file('stills_dir'))
+    self.stills_dir_bt.clicked.connect(lambda: self.get_dir('stills_dir'))
 
     self.details_cosine_label = QtWidgets.QLabel(self)
     self.details_cosine_label.setText('VGG-Face Cosine details file: ')
@@ -149,7 +149,7 @@ class DetailsDialog(QtWidgets.QDialog):
     self.csvs_cosine_line.setText(self.settings.csvs_cosine_path)
     self.csvs_cosine_bt = QtWidgets.QPushButton(self)
     self.csvs_cosine_bt.setText('Search')
-    self.csvs_cosine_bt.clicked.connect(lambda: self.get_file('csvs_cosine'))
+    self.csvs_cosine_bt.clicked.connect(lambda: self.get_dir('csvs_cosine'))
 
     self.csvs_l2_label = QtWidgets.QLabel(self)
     self.csvs_l2_label.setText('VGG-Face L2 CSVs directory: ')
@@ -157,7 +157,7 @@ class DetailsDialog(QtWidgets.QDialog):
     self.csvs_l2_line.setText(self.settings.csvs_l2_path)
     self.csvs_l2_bt = QtWidgets.QPushButton(self)
     self.csvs_l2_bt.setText('Search')
-    self.csvs_l2_bt.clicked.connect(lambda: self.get_file('csvs_l2'))
+    self.csvs_l2_bt.clicked.connect(lambda: self.get_dir('csvs_l2'))
 
     self.precision_label = QtWidgets.QLabel(self)
     self.precision_label.setText('Precision (integer): ')
@@ -205,7 +205,7 @@ class DetailsDialog(QtWidgets.QDialog):
     self.settings.stills_dir = self.stills_dir_line.text()
     self.close()
 
-  def get_file(self, data:str):
+  def get_dir(self, data:str):
     path = str(QtWidgets.QFileDialog.getExistingDirectory(self, str(Path.home())))
 
     if data == 'morphs_dir':
@@ -223,6 +223,17 @@ class DetailsDialog(QtWidgets.QDialog):
     else:
       pass
       
+    self.update_lines()
+
+  def get_file(self, data:str):
+    path = str(QtWidgets.QFileDialog.getOpenFileName(self, 'Open File', str(Path.home()))[0])
+    if data == 'details_cosine':
+      self.settings.details_cosine_path = path
+    elif data == 'details_l2':
+      self.settings.details_l2_path = path
+    else:
+      pass
+    
     self.update_lines()
 
   def update_lines(self):

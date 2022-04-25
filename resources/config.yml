@@ -1,7 +1,7 @@
 csvs_cosine_path: ''
 csvs_l2_path: ''
-details_cosine_path: ../_data/stats/details_cosine.txt
-details_l2_path: ../_data/stats/details_l2.txt
+details_cosine_path: /home/cameron/Projects/morphinspector/_data/stats/details_cosine.txt
+details_l2_path: /home/cameron/Projects/morphinspector/_data/stats/details_l2.txt
 morphs_dir: /home/cameron/Projects/morphinspector/_data/images/morphs_renamed
 precision: 4
 still_ext: .jpg
