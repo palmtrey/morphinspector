@@ -203,6 +203,13 @@ class DetailsDialog(QtWidgets.QDialog):
   def confirm_clicked(self):
     self.settings.morphs_dir = self.morphs_dir_line.text()
     self.settings.stills_dir = self.stills_dir_line.text()
+    self.settings.details_cosine_path = self.details_cosine_line.text()
+    self.settings.details_l2_path = self.details_l2_line.text()
+    self.settings.csvs_cosine_path = self.csvs_cosine_line.text()
+    self.settings.csvs_l2_path = self.csvs_l2_line.text()
+    
+    # TO DO: Input validation on self.precision_line
+    self.settings.precision = int(self.precision_line.text())
     self.close()
 
   def get_dir(self, data:str):
@@ -212,10 +219,6 @@ class DetailsDialog(QtWidgets.QDialog):
       self.settings.morphs_dir = path
     elif data == 'stills_dir':
       self.settings.stills_dir = path
-    elif data == 'details_cosine':
-      self.settings.details_cosine_path = path
-    elif data == 'details_l2':
-      self.settings.details_l2_path = path
     elif data == 'csvs_cosine':
       self.settings.csvs_cosine_path = path
     elif data == 'csvs_l2':
