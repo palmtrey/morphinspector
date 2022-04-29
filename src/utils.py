@@ -1,9 +1,6 @@
-import csv
+import enum
 import json
-import matplotlib.gridspec as gridspec
-import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-import math
 import numpy as np
 import os
 import pandas
@@ -13,6 +10,7 @@ from enum import Enum
 import yaml
 import pickle
 import statistics
+
 
 class GUISettings():
   '''
@@ -85,6 +83,7 @@ class GUISettings():
         self.precision = inputdict['precision']
     else:
       report('Config file does not exist. Will retrieve settings from', ReportType.INFO)
+
 
 class Morph():
   '''
@@ -234,10 +233,20 @@ class Morph():
   def get_all_still2(self) -> list:
     return self.all_still2
 
+
 class ReportType(Enum):
   INFO = 1
   WARNING = 2
   ERROR = 3
+
+
+class Rank(enum.Enum):
+  A = 1  # Rank A indicates that the morph can be identified as both of its composite identities
+
+  B = 2  # Rank B indiciates that the morph can only be identified as one of its composite identities.
+
+  C = 3  # Rank C indiciates that the morph cannot be identified as either one of its composite identities.
+
 
 def encapsulate_morphs(settings:GUISettings) -> list:
     '''
@@ -294,8 +303,10 @@ def encapsulate_morphs(settings:GUISettings) -> list:
 
     return Morphs
 
+
 def get_stills_from_morph(morph:str) -> list:
   return [morph.split('/')[-1].split('-')[0].split('.')[0], morph.split('/')[-1].split('-')[1].split('.')[0]]
+
 
 def calc_avgdist(morph_csv:str, distance_label:str, morph_ext:str = '.png') -> float:
   '''
@@ -346,6 +357,7 @@ def calc_avgdist(morph_csv:str, distance_label:str, morph_ext:str = '.png') -> f
 
   return avgdist
 
+
 def calc_morphdetails(morph_csv:str, distance_label:str, morph_ext:str = '.png') -> dict:
   '''
   Calculates various metrics for rating a given morph and returns them in a dictionary
@@ -394,6 +406,7 @@ def calc_morphdetails(morph_csv:str, distance_label:str, morph_ext:str = '.png')
 
   return result
 
+
 def writescores(morph_csvs_dir:str, output_file:str, distance_label:str) -> None:
   '''
   Writes morph details for all morphs csvs stored in morph_csvs_dir to an output file, output_file (a txt file)
@@ -420,7 +433,8 @@ def writescores(morph_csvs_dir:str, output_file:str, distance_label:str) -> None
 
   with open(output_file, 'w') as file:
     file.write(json.dumps(details))
-  
+
+
 def plot_wasserstein(morph_details_file:str) -> None:
   details = {}
   with open(morph_details_file) as file:
@@ -464,6 +478,7 @@ def plot_wasserstein(morph_details_file:str) -> None:
   plt.hist(yM, bins=100)
   plt.show()
 
+
 def write_details_to_csv(morph_details_file:str, csv_out_file:str) -> None:
   csv_out = 'File Name, average distance, distance A, distance B, 1-wasserstein\n'
 
@@ -476,6 +491,7 @@ def write_details_to_csv(morph_details_file:str, csv_out_file:str) -> None:
 
   with open(csv_out_file, 'w') as f:
     f.write(csv_out)
+
 
 def report(message, type:ReportType) -> None:
   prefix = ''
