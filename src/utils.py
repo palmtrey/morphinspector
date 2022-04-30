@@ -358,7 +358,7 @@ def calc_avgdist(morph_csv:str, distance_label:str, morph_ext:str = '.png') -> f
   return avgdist
 
 
-def calc_morphdetails(morph_csv:str, distance_label:str, morph_ext:str = '.png') -> dict:
+def calc_morphdetails(morph_csv: str, distance_label: str, morph_ext: str = '.png') -> dict:
   '''
   Calculates various metrics for rating a given morph and returns them in a dictionary
 
@@ -367,23 +367,22 @@ def calc_morphdetails(morph_csv:str, distance_label:str, morph_ext:str = '.png')
       using the naming convention below:
         still_1-still_2.morph_ext.csv
     - the morph's csv file is formatted using tab separators
-  
+
   Postconditions:
     - None
-  
+
   Parameters:
     - morph_csv: a valid path to a morph's csv comparison file
     - morph_ext: the morph's file extension
     - distance_label: the csv file label for distances (ex. 'VGG-Face_cosine', 'VGG-Face_euclidean_l2', etc.)
   '''
 
-
   # Prepare incoming csv file
   df = pandas.read_csv(morph_csv, sep='\t')
   df.drop(columns=['Unnamed: 0'], inplace=True)
   for i in range(len(df)):
     df.at[i, 'identity'] = df['identity'][i].split('/')[-1]
-    
+
   identity_1 = morph_csv.split('/')[-1].split('-')[0].split('_')[0]
   identity_2 = morph_csv.split('/')[-1].split('-')[1].split('.')[0].split('_')[0]
 
