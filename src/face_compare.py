@@ -33,9 +33,10 @@ def compare(morphs_dir:str, stills_dir:str, output_csvs_dir:str):
     except AttributeError:
       print('AttributeError encountered... skipping morph ' + filename)
 
+
 if __name__ == '__main__':
   compare(
-    morphs_dir='../data/images/morphs_renamed_scanned',
-    stills_dir='../data/images/stills_renamed',
-    output_csvs_dir='../data/nearface_out/csvs_renamed_scanned_l2'
+      morphs_dir='../data/images/frll_morphs',
+      stills_dir='../data/images/frll_stills',
+      output_csvs_dir='../data/nearface_out/morphs/frll_morphs_l2'
   )

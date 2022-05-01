@@ -181,8 +181,13 @@ def compare_stills(stills_dir: str, output_dir: str, still_id: str) -> None:
   shutil.rmtree(temp_dir)
 
 
-def compare_all_stills(stills_dir: str, output_dir: str, ids: list):
+def compare_all_stills(stills_dir: str, output_dir: str, ids: list = [], compare_all: bool = False):
   """Makes many still comparisons by calling compare_stills multiple times."""
+
+  if compare_all:
+    stills = os.listdir(stills_dir)
+    for still in stills:
+      ids.append(still.split('_')[0])
 
   for id in tqdm(ids):
     compare_stills(stills_dir, output_dir, id)

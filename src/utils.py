@@ -428,7 +428,10 @@ def writescores(morph_csvs_dir:str, output_file:str, distance_label:str) -> None
 
   details = {}
   for csv in tqdm(os.listdir(morph_csvs_dir)):
-    details[csv] = calc_morphdetails(morph_csvs_dir + '/' + csv, distance_label)
+    try:
+      details[csv] = calc_morphdetails(morph_csvs_dir + '/' + csv, distance_label)
+    except statistics.StatisticsError:
+      print('StatisticsError. Skipping morph.')
 
   with open(output_file, 'w') as file:
     file.write(json.dumps(details))
