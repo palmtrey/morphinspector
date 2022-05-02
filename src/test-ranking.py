@@ -21,10 +21,10 @@ def main():
     #             '../data/nearface_out/morphs/frll_morphs_scanned_l2']
 
     # for i in range(0, 4):
-    #     xy = roc_curve.gen_roc_curve(roc_locs[i],
-    #                                  '../data/nearface_out/stills/frll_stills_l2',
-    #                                  0.001)
-
+    xy = roc_curve.gen_roc_curve('../data/nearface_out/morphs/clarkson_morphs_l2',
+                                     '../data/nearface_out/stills/clarkson_stills_l2',
+                                     0.001)
+    roc_curve.plot_roc_curve(xy, 'All Ranks')
     #     with open('../data/roc_curves/frll_scanned_l2/' + roc_names[i], 'w') as f:
     #         json.dump(xy, f)
 

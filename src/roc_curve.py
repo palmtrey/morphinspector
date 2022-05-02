@@ -78,7 +78,8 @@ def import_morph_nearface_csv(csv_file: str) -> tuple[dict]:
       identity_1_distances[df['identity'][i]] = df[distance_label][i]
     elif df['identity'][i].split('_')[0] == identity_2:
       identity_2_distances[df['identity'][i]] = df[distance_label][i]
-
+      
+  print(identity_1_distances, identity_2_distances)
   return (identity_1_distances, identity_2_distances)
 
 
@@ -269,10 +270,15 @@ def gen_roc_curve(morphs_csvs_dir: str, stills_csvs_dir: str, gamma_step: float)
 
   # Calculate true positive rate and false positive rate for each gamma
   for gamma in result_dict.keys():
-    FP = result_dict[gamma]['FP']
-    TN = result_dict[gamma]['TN']
-    TP = result_dict[gamma]['TP']
-    FN = result_dict[gamma]['FN']
+    # FP = result_dict[gamma]['FP']
+    # TN = result_dict[gamma]['TN']
+    # TP = result_dict[gamma]['TP']
+    # FN = result_dict[gamma]['FN']
+
+    FN = result_dict[gamma]['FP']
+    TP = result_dict[gamma]['TN']
+    TN = result_dict[gamma]['TP']
+    FP = result_dict[gamma]['FN']
 
     result_dict[gamma]['TPR'] = TP / (TP + FN)
     result_dict[gamma]['FPR'] = FP / (FP + TN)
