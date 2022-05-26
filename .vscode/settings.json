@@ -5,6 +5,6 @@
     "python.linting.flake8Enabled": true,
     "python.linting.flake8Args": [
         "--max-line-length=120",
-        "--ignore=E111, E114, E116",
+        "--ignore=E111, E114, E116, E125",
     ],
 }

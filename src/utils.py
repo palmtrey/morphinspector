@@ -509,5 +509,93 @@ def report(message, type:ReportType) -> None:
     print(prefix + line)
 
 
+def import_morph_nearface_csv(csv_file: str) -> tuple[dict]:
+  """Imports a csv containing morph distances.
+
+  Imports a morph csv created by NearFace and returns a tuple of
+  two dicts, the first containing the distances to identity 1,
+  the second containing the distances to identity 2.
+
+  Args:
+    csv_file: A path to a morph's csv file generated
+      by NearFace.
+
+  Returns:
+    A tuple containing two dicts in the format
+
+    tuple(identity_1_dict, identity_2_dict)
+
+    where each dict is in the format
+
+    {still_1: distance_to_morph, still_2: ...}
+
+  """
+
+  distance_label = 'VGG-Face_euclidean_l2'
+
+  df = pandas.read_csv(csv_file, sep='\t')
+  df.drop(columns=['Unnamed: 0'], inplace=True)
+  for i in range(len(df)):
+    df.at[i, 'identity'] = df['identity'][i].split('/')[-1]
+
+  identity_1 = csv_file.split('/')[-1].split('-')[0].split('_')[0]
+  identity_2 = csv_file.split('/')[-1].split('-')[1].split('.')[0].split('_')[0]
+
+  identity_1_distances = {}
+  identity_2_distances = {}
+
+  for i in range(len(df)):
+    if df['identity'][i].split('_')[0] == identity_1:
+      identity_1_distances[df['identity'][i]] = df[distance_label][i]
+    elif df['identity'][i].split('_')[0] == identity_2:
+      identity_2_distances[df['identity'][i]] = df[distance_label][i]
+      
+  # print(identity_1_distances, identity_2_distances)
+  return (identity_1_distances, identity_2_distances)
 
 
+def import_still_nearface_csv(csv_file: str) -> dict:
+  """Imports a csv containing still distances.
+
+  Imports a still csv created by NearFace and returns a dict
+  containing distances from the given still to all other stills.
+
+  Args:
+    csv_file: A path to a still's csv file generated
+      by NearFace.
+
+  Returns:
+    A dict in the format
+
+    {still_1: dist_to_given_still, still_2: ...}
+
+  """
+  distance_label = 'VGG-Face_euclidean_l2'
+
+  df = pandas.read_csv(csv_file, sep='\t')
+  df.drop(columns=['Unnamed: 0'], inplace=True)
+  for i in range(len(df)):
+    df.at[i, 'identity'] = df['identity'][i].split('/')[-1]
+
+  result_dict = {}
+  for i in range(len(df)):
+    result_dict[df['identity'][i]] = df[distance_label][i]
+  # print(result_dict)
+  return result_dict
+
+
+def classify(dist: float, gamma: float) -> bool:
+  """Classifies a distance as recognized or not.
+
+  Args:
+    dist: The distance to classify.
+    gamma: The threshold to compare against.
+
+  Returns:
+    True if dist < gamma, false otherwise.
+
+  """
+  if dist < gamma:
+    return True   # Face recognized (positive)
+  else:
+    return False  # Face not recognized (negative)

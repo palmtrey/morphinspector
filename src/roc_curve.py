@@ -34,103 +34,11 @@ import shutil
 import matplotlib.pyplot as plt
 from nearface import NearFace
 import numpy as np
-import pandas
 from tqdm import tqdm
+import utils
 
 
-def import_morph_nearface_csv(csv_file: str) -> tuple[dict]:
-  """Imports a csv containing morph distances.
-
-  Imports a morph csv created by NearFace and returns a tuple of
-  two dicts, the first containing the distances to identity 1,
-  the second containing the distances to identity 2.
-
-  Args:
-    csv_file: A path to a morph's csv file generated
-      by NearFace.
-
-  Returns:
-    A tuple containing two dicts in the format
-
-    tuple(identity_1_dict, identity_2_dict)
-
-    where each dict is in the format
-
-    {still_1: distance_to_morph, still_2: ...}
-
-  """
-
-  distance_label = 'VGG-Face_euclidean_l2'
-
-  df = pandas.read_csv(csv_file, sep='\t')
-  df.drop(columns=['Unnamed: 0'], inplace=True)
-  for i in range(len(df)):
-    df.at[i, 'identity'] = df['identity'][i].split('/')[-1]
-
-  identity_1 = csv_file.split('/')[-1].split('-')[0].split('_')[0]
-  identity_2 = csv_file.split('/')[-1].split('-')[1].split('.')[0].split('_')[0]
-
-  identity_1_distances = {}
-  identity_2_distances = {}
-
-  for i in range(len(df)):
-    if df['identity'][i].split('_')[0] == identity_1:
-      identity_1_distances[df['identity'][i]] = df[distance_label][i]
-    elif df['identity'][i].split('_')[0] == identity_2:
-      identity_2_distances[df['identity'][i]] = df[distance_label][i]
-      
-  print(identity_1_distances, identity_2_distances)
-  return (identity_1_distances, identity_2_distances)
-
-
-def import_still_nearface_csv(csv_file: str) -> dict:
-  """Imports a csv containing still distances.
-
-  Imports a still csv created by NearFace and returns a dict
-  containing distances from the given still to all other stills.
-
-  Args:
-    csv_file: A path to a still's csv file generated
-      by NearFace.
-
-  Returns:
-    A dict in the format
-
-    {still_1: dist_to_given_still, still_2: ...}
-
-  """
-  distance_label = 'VGG-Face_euclidean_l2'
-
-  df = pandas.read_csv(csv_file, sep='\t')
-  df.drop(columns=['Unnamed: 0'], inplace=True)
-  for i in range(len(df)):
-    df.at[i, 'identity'] = df['identity'][i].split('/')[-1]
-
-  result_dict = {}
-  for i in range(len(df)):
-    result_dict[df['identity'][i]] = df[distance_label][i]
-
-  return result_dict
-
-
-def classify(dist: float, gamma: float) -> bool:
-  """Classifies a distance as recognized or not.
-
-  Args:
-    dist: The distance to classify.
-    gamma: The threshold to compare against.
-
-  Returns:
-    True if dist < gamma, false otherwise.
-
-  """
-  if dist < gamma:
-    return True   # Face recognized (positive)
-  else:
-    return False  # Face not recognized (negative)
-
-
-def compare_stills(stills_dir: str, output_dir: str, still_id: str) -> None:
+def compare_stills(stills_dir: str, output_dir: str, still_id: str, use_threshold=False) -> None:
   """Uses NearFace to compare one still to all others.
 
   Takes a still and compares it to all the other stills, excluding itself.
@@ -168,7 +76,7 @@ def compare_stills(stills_dir: str, output_dir: str, still_id: str) -> None:
           db_path=temp_dir,
           distance_metric='euclidean_l2',
           enforce_detection=False,
-          use_threshold=False
+          use_threshold=use_threshold
       )
 
       if not os.path.isdir(output_dir):
@@ -182,7 +90,12 @@ def compare_stills(stills_dir: str, output_dir: str, still_id: str) -> None:
   shutil.rmtree(temp_dir)
 
 
-def compare_all_stills(stills_dir: str, output_dir: str, ids: list = [], compare_all: bool = False):
+def compare_all_stills(stills_dir: str,
+                       output_dir: str,
+                       ids: list = [],
+                       compare_all: bool = False,
+                       use_threshold=False
+                       ):
   """Makes many still comparisons by calling compare_stills multiple times."""
 
   if compare_all:
@@ -191,7 +104,7 @@ def compare_all_stills(stills_dir: str, output_dir: str, ids: list = [], compare
       ids.append(still.split('_')[0])
 
   for id in tqdm(ids):
-    compare_stills(stills_dir, output_dir, id)
+    compare_stills(stills_dir, output_dir, id, use_threshold=use_threshold)
 
 
 def gen_roc_curve(morphs_csvs_dir: str, stills_csvs_dir: str, gamma_step: float) -> tuple[list]:
@@ -238,47 +151,60 @@ def gen_roc_curve(morphs_csvs_dir: str, stills_csvs_dir: str, gamma_step: float)
   # Start with morph compared to identities (these all should be negative/zero)
   print('Retrieving data from morphs...')
   for file in tqdm(os.listdir(morphs_csvs_dir)):
-    a_b = import_morph_nearface_csv(morphs_csvs_dir + '/' + file)
+    a_b = utils.import_morph_nearface_csv(morphs_csvs_dir + '/' + file)
     id_a = a_b[0]
     id_b = a_b[1]
 
-    for gamma in gamma_list:
-      for distance in id_a.values():
-        if classify(distance, gamma):
-          result_dict[gamma]['FP'] += 1
-        else:
-          result_dict[gamma]['TN'] += 1
+    id_a_avg = np.mean(list(id_a.values()))
+    id_b_avg = np.mean(list(id_b.values()))
 
-      for distance in id_b.values():
-        if classify(distance, gamma):
-          result_dict[gamma]['FP'] += 1
-        else:
-          result_dict[gamma]['TN'] += 1
+    for gamma in gamma_list:
+      if not utils.classify(id_a_avg, gamma): # This should yield a 0 from the FRS
+        result_dict[gamma]['TP'] += 1
+      else:
+        result_dict[gamma]['FN'] += 1
+
+     # for distance in id_b.values():
+      if not utils.classify(id_b_avg, gamma):
+        result_dict[gamma]['TP'] += 1
+      else:
+        result_dict[gamma]['FN'] += 1
 
   # Then compare stills to stills
   print('Retrieving data from stills...')
   for file in tqdm(os.listdir(stills_csvs_dir)):
-    id = import_still_nearface_csv(stills_csvs_dir + '/' + file)
+    id = utils.import_still_nearface_csv(stills_csvs_dir + '/' + file)
 
     for gamma in gamma_list:
       for distance in id.values():
         if distance != 0:
-          if classify(distance, gamma):
-            result_dict[gamma]['TP'] += 1
+          if utils.classify(distance, gamma): # This should yield a 1 from the FRS
+            result_dict[gamma]['TN'] += 1
           else:
-            result_dict[gamma]['FN'] += 1
+            result_dict[gamma]['FP'] += 1
 
   # Calculate true positive rate and false positive rate for each gamma
   for gamma in result_dict.keys():
-    # FP = result_dict[gamma]['FP']
-    # TN = result_dict[gamma]['TN']
-    # TP = result_dict[gamma]['TP']
-    # FN = result_dict[gamma]['FN']
+    # Regular below
+    FP = result_dict[gamma]['FP']
+    TN = result_dict[gamma]['TN']
+    TP = result_dict[gamma]['TP']
+    FN = result_dict[gamma]['FN']
 
-    FN = result_dict[gamma]['FP']
-    TP = result_dict[gamma]['TN']
-    TN = result_dict[gamma]['TP']
-    FP = result_dict[gamma]['FN']
+    # Zander's inverted below
+    # FN = result_dict[gamma]['FP']
+    # TP = result_dict[gamma]['TN']
+    # TN = result_dict[gamma]['TP']
+    # FP = result_dict[gamma]['FN']
+
+    # Actual inverted below
+    # TP = result_dict[gamma]['FP']
+    # FN = result_dict[gamma]['TN']
+    # FP = result_dict[gamma]['TP']
+    # TN = result_dict[gamma]['FN']
+
+    #print('FN + TP: ' + str(FN+TP))
+    #print('TN + FP: ' + str(TN+FP))
 
     result_dict[gamma]['TPR'] = TP / (TP + FN)
     result_dict[gamma]['FPR'] = FP / (FP + TN)
@@ -294,7 +220,7 @@ def gen_roc_curve(morphs_csvs_dir: str, stills_csvs_dir: str, gamma_step: float)
 
 
 def plot_roc_curve(xy: tuple[list[float], list[float]], plot_title: str) -> None:
-  """Plots a ROC curve given its x and y coordinate data.
+  """Plots an ROC curve given its x and y coordinate data.
 
   Args:
     xy: a tuple containing two lists of floats. The first is the
@@ -311,10 +237,46 @@ def plot_roc_curve(xy: tuple[list[float], list[float]], plot_title: str) -> None
   y = xy[1]
 
   plt.scatter(x, y, s=3)
-  plt.plot(x, y)
   plt.title(plot_title)
   plt.xlabel("False Positive Rate")
   plt.ylabel("True Positive Rate")
+  plt.xlim([0, 1])
+  plt.ylim([0, 1])
+  plt.show()
+
+
+def plot_multiple_roc_curve(
+    xy0: tuple[list[float]],
+    plot_title: str,
+    xy1: tuple[list[float]] = None,
+    xy2: tuple[list[float]] = None,
+    xy3: tuple[list[float]] = None,
+    xy0_label: str = '',
+    xy1_label: str = '',
+    xy2_label: str = '',
+    xy3_label: str = ''):
+  """Same as plot_roc_curve, except can plot up to four curves on one plot."""
+
+  size = 3
+
+  # x = FPR
+  # y = TPR
+
+  plt.scatter(xy0[0], xy0[1], s=size, label=xy0_label)
+
+  if xy1 is not None:
+    plt.scatter(xy1[0], xy1[1], s=size, label=xy1_label)
+
+  if xy2 is not None:
+    plt.scatter(xy2[0], xy2[1], s=size, label=xy2_label)
+
+  if xy3 is not None:
+    plt.scatter(xy3[0], xy3[1], s=size, label=xy3_label)
+
+  plt.title(plot_title)
+  plt.xlabel("False Positive Rate")
+  plt.ylabel("True Positive Rate")
+  plt.legend(loc='upper right')
   plt.xlim([0, 1])
   plt.ylim([0, 1])
   plt.show()

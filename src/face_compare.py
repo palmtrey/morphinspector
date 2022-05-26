@@ -21,7 +21,7 @@ def compare(morphs_dir:str, stills_dir:str, output_csvs_dir:str):
         img_path = morphs_dir + '/' + filename, 
         db_path = stills_dir,
         distance_metric='euclidean_l2',
-        enforce_detection= False, 
+        enforce_detection=False, 
         use_threshold=False
       )
 

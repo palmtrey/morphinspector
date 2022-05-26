@@ -25,8 +25,11 @@ ranking morphs based on their ability to fool a facial recognition system.
   TODO
 """
 
+import csv
+from itertools import zip_longest
 import json
 import os
+import pandas
 import shutil
 from utils import Rank
 
@@ -108,3 +111,22 @@ def copy_ranked_morphs_csvs(morph_csv_dir: str, dest_dir: str, ranks: dict[Rank,
 
   for morph_C in ranks[Rank.C]:
     shutil.copy(morph_csv_dir + '/' + morph_C + '.' + file_ext, dest_dir + '/' + folder_names[2])
+
+
+def export_ranked_morphs(morph_details: str, threshold: float, outfile: str) -> None:
+  '''
+  Uses rank_morphs() to rank a set of morphs and then exports the
+  rankings to a csv file in a human-readable format.
+  '''
+
+  ranks = rank_morphs(morph_details, threshold)
+
+  ranks_export = {}
+
+  ranks_export['Rank A'] = ranks[Rank.A]
+  ranks_export['Rank B'] = ranks[Rank.B]
+  ranks_export['Rank C'] = ranks[Rank.C]
+
+  with open(outfile, 'w') as f:
+    json.dump(ranks_export, f)
+
