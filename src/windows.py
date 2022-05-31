@@ -5,6 +5,7 @@ import PyQt6.QtCore as QtCore
 import PyQt6.QtWidgets as QtWidgets
 import PyQt6.QtGui as QtGui
 
+
 class MainWindow(QtWidgets.QMainWindow):
   def __init__(self, size:QtCore.QSize, precision:int, Morphs:list, settings:utils.GUISettings):
     super().__init__()
@@ -159,8 +160,9 @@ class MainWindow(QtWidgets.QMainWindow):
     d = QtWidgets.QMessageBox.critical(self, 'Error', errstr)
     exit(1)
 
+
 class AllStillsWindow(QtWidgets.QMainWindow):
-  def __init__(self, size:QtCore.QSize, morph:utils.Morph, still_num:int):
+  def __init__(self, size: QtCore.QSize, morph: utils.Morph, still_num: int):
     super().__init__()
 
     QtGui.QShortcut(QtGui.QKeySequence('Ctrl+W'), self).activated.connect(self.close)
@@ -184,9 +186,11 @@ class AllStillsWindow(QtWidgets.QMainWindow):
 
     self.size = size
     self.setWindowTitle('All stills for ' + str(self.still))
-    self.setMinimumSize(self.size.width()//4, self.size.height()//4)
+    # self.setMinimumSize(self.size.width()//4, self.size.height()//4)
 
-    
+    self.initUI()
+
+
 
     # self.layout = QtWidgets.QGridLayout()
 
@@ -205,18 +209,58 @@ class AllStillsWindow(QtWidgets.QMainWindow):
     #     column = 0
     #     row += 1
     #   iterator += 1
-      
-    self.layout = QtWidgets.QVBoxLayout()
-    for still in self.stills:
-      self.layout.addWidget(widgets.MImageContainer(self.stills_dir + '/' + still, ''))
+   
+    # # self.layout = QtWidgets.QVBoxLayout()
+    # # for still in self.stills:
+    # #   self.layout.addWidget(widgets.MImageContainer(self.stills_dir + '/' + still, ''))
 
-    self.widget = QtWidgets.QWidget()
+    # self.widget = QtWidgets.QWidget()
+    # self.widget.setLayout(self.layout)
+
+    # self.scroll = QtWidgets.QScrollArea()
+    # self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+    # self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    # self.scroll.setWidgetResizable(True)
+    # self.scroll.setWidget(self.widget)
+
+    # self.setCentralWidget(self.scroll)
+
+  def initUI(self):
+    self.scroll = QtWidgets.QScrollArea()             # Scroll Area which contains the widgets, set as the centralWidget
+    self.widget = QtWidgets.QWidget()                 # Widget that contains the collection of Vertical Box
+    self.vbox = QtWidgets.QVBoxLayout()               # The Vertical Box that contains the Horizontal Boxes of  labels and buttons
+
+    self.layout = QtWidgets.QGridLayout()
+
+    row = 0
+    column = 0
+    images = []
+    iterator = 0
+    for still in sorted(self.stills):
+      print(self.stills_dir + '/' + still)
+      images.append(widgets.MImageContainer2(self.stills_dir + '/' + still))
+      self.layout.addWidget(images[iterator], row, column)
+      if column == 0:
+        column = 1
+      elif column == 1:
+        column = 0
+        row += 1
+      iterator += 1
+
+
+    # for still in self.stills:
+    #   self.vbox.addWidget(widgets.MImage2(self.stills_dir + '/' + still))
+
     self.widget.setLayout(self.layout)
 
-    self.scroll = QtWidgets.QScrollArea()
+    # Scroll Area Properties
     self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
     self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     self.scroll.setWidgetResizable(True)
     self.scroll.setWidget(self.widget)
 
     self.setCentralWidget(self.scroll)
+
+    self.setGeometry(600, 100, 1000, 900)
+    self.setWindowTitle('Scroll Area Demonstration')
+    # self.show()

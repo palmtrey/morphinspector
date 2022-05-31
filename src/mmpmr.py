@@ -77,17 +77,8 @@ def calc_mmpmr(morphs_csvs_dir: str, tau: list[float], distance_label: str):
 
 if __name__ == '__main__':
   # Example usage
-  tau = [x / 100.0 for x in range(0, 100, 1)]
-  idx = tau.index(0.86)
-  res = calc_mmpmr('../data/stats/nearface_out/morphs/frll_morphs_scanned_l2', tau, 'VGG-Face_euclidean_l2')
+  tau = [0.0]
+  res = calc_mmpmr('../data/stats/nearface_out/morphs/ranking_subsets/frll_scanned_subset_l2/rank_c', tau, 'VGG-Face_euclidean_l2')
   
   # print(tau)
-  # print(res)
-
-  print('MMPMR @ tau = 0.86: ' + str(res[idx]))
-
-  plt.scatter(tau, res)
-  plt.xlabel('Tau')
-  plt.ylabel('MMPMR')
-  plt.title('FRLL Print & Scan L2 MMPMR')
-  plt.show()
+  print(res)

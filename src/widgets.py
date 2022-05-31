@@ -3,8 +3,8 @@ from PIL import Image
 import PyQt6.QtCore as QtCore
 import PyQt6.QtGui as QtGui
 import PyQt6.QtWidgets as QtWidgets
-import windows
 from pathlib import Path
+
 
 class DataLabel(QtWidgets.QLabel):
   def __init__(self):
@@ -17,13 +17,14 @@ class DataLabel(QtWidgets.QLabel):
   def getText(self):
     return self.text
 
+
 class MImage(QtWidgets.QWidget):
-  def __init__(self, image:str, parent=None):
+  def __init__(self, image: str, parent=None):
     super().__init__()
     self.p = QtGui.QPixmap(image)
-    pil_img = Image.open(image)
-    self.native_height = 1 # default values for aspect ratio 1:1 (square image)
+    self.native_height = 1  # default values for aspect ratio 1:1 (square image)
     self.native_width = 1
+    self.sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
 
   def setPixmap(self, p):
     self.p = QtGui.QPixmap(p)
@@ -43,11 +44,12 @@ class MImage(QtWidgets.QWidget):
     new_size.scale(event.size(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
     self.resize(new_size)
 
+
 class MImageContainer(QtWidgets.QWidget):
   # Signals
   all_stills_pressed = QtCore.pyqtSignal()
 
-  def __init__(self, image:str, type:str):
+  def __init__(self, image: str, type: str):
     super().__init__()
     self.mimage = MImage(image)
     self.bottom_label_text = image.split('/')[-1]
@@ -55,7 +57,6 @@ class MImageContainer(QtWidgets.QWidget):
     self.bottom_label = QtWidgets.QLabel(self.bottom_label_text)
     self.bottom_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
     self.top_label = QtWidgets.QLabel(type)
-
 
     self.layout = QtWidgets.QGridLayout()
     self.layout.addWidget(self.top_label, 0, 0, 1, 1)
@@ -68,10 +69,8 @@ class MImageContainer(QtWidgets.QWidget):
       self.layout.addWidget(self.all_button, 12, 0, 1, 1)
       self.all_button.clicked.connect(self.all_button_pressed)
 
-
     self.setLayout(self.layout)
     
-
   def set_image(self, image:str) -> None:
     self.mimage.setPixmap(image)
     self.bottom_label_text = image.split('/')[-1]
@@ -79,6 +78,37 @@ class MImageContainer(QtWidgets.QWidget):
 
   def all_button_pressed(self) -> None:
     self.all_stills_pressed.emit()
+
+
+class MImage2(QtWidgets.QLabel):
+  def __init__(self, image: str, parent=None):
+    super().__init__()
+    self.p = QtGui.QPixmap(image)
+    pil_img = Image.open(image)
+    self.native_height = pil_img.size[0]
+    self.native_width = pil_img.size[1]
+    self.setPixmap(self.p)
+    self.fixed_height = 250
+
+  def resizeEvent(self, event):
+    self.p = self.p.scaled(event.size().width(), self.fixed_height, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
+    self.setPixmap(self.p)
+
+class MImageContainer2(QtWidgets.QWidget):
+
+  def __init__(self, image: str):
+    super().__init__()
+    self.mimage = MImage2(image)
+    self.bottom_label_text = image.split('/')[-1]
+    self.bottom_label = QtWidgets.QLabel(self.bottom_label_text)
+    self.bottom_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
+
+    self.layout = QtWidgets.QGridLayout()
+    self.layout.addWidget(self.mimage, 0, 0, 10, 2)
+    self.layout.addWidget(self.bottom_label, 11, 0, 1, 1)
+
+    self.setLayout(self.layout)
+
 
 class WindowWidget(QtWidgets.QWidget):
   def __init__(self):
@@ -88,6 +118,7 @@ class WindowWidget(QtWidgets.QWidget):
     new_size = QtCore.QSize(2, 1)
     new_size.scale(event.size(), QtCore.Qt.AspectRatioMode.KeepAspectRatio)
     self.resize(new_size)
+
 
 class DetailLine(QtWidgets.QWidget):
   def __init__(self, labeltext:str):
@@ -102,6 +133,7 @@ class DetailLine(QtWidgets.QWidget):
     self.layout.addWidget(self.line)
 
     self.setLayout(self.layout)
+
 
 class DetailsDialog(QtWidgets.QDialog):
   def __init__(self, size:QtCore.QSize, settings:utils.GUISettings):

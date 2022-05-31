@@ -227,10 +227,10 @@ class Morph():
   def get_still2_id(self) -> str:
     return self.still2_id
 
-  def get_all_still1(self) -> list:
+  def get_all_still1(self) -> list[str]:
     return self.all_still1
 
-  def get_all_still2(self) -> list:
+  def get_all_still2(self) -> list[str]:
     return self.all_still2
 
 
