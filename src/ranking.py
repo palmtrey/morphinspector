@@ -25,11 +25,8 @@ ranking morphs based on their ability to fool a facial recognition system.
   TODO
 """
 
-import csv
-from itertools import zip_longest
 import json
 import os
-import pandas
 import shutil
 from utils import Rank
 
