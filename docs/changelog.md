@@ -6,13 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-* Allow user to choose their own settings on startup
-* Add Ctrl+W and Ctrl+Q shortcuts to windows & dialogs
-* Speed up startup encapsulation - Morph encapsulation cache working. Startup is now more or less instant after first run with a set of morphs.
-* Remove MorphScore stat and replace with average distance
 
 ### Changed
 
 ### Removed
+
+## [0.0.1] - 2022-06-01
+### Added
+- View morphs and stills side-by-side.
+- View basic, pre-generated information about morphs.
+- Allow user to choose settings on startup
+- Add Ctrl+W and Ctrl+Q exit shortcuts to windows & dialogs
+- View all stills for a given identity using the "Show all" buttons.
+- Additional scripts in src/ for creation of future statistics.
+
+### Changed
+- Remove MorphScore stat and replace with average distance
+- Speed up startup encapsulation - Morph encapsulation cache working. Startup is now more or less instant after first run with a set of morphs.
 
 

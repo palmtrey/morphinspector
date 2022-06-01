@@ -599,3 +599,18 @@ def classify(dist: float, gamma: float) -> bool:
     return True   # Face recognized (positive)
   else:
     return False  # Face not recognized (negative)
+
+
+def sort_stills(stills: list[str]) -> list[str]:
+  """Sorts a list of stills by numeric value."""
+
+  sort_dict = {}
+
+  for still in stills:
+    id = int(still.split('/')[-1].split('_')[0])
+    num = int(still.split('/')[-1].split('.')[0].split('_')[1])
+    sort_val = int(str(id) + str(num))
+    sort_dict[still] = sort_val
+  
+  return list(dict(sorted(sort_dict.items(), key=lambda x:x[1])).keys())
+

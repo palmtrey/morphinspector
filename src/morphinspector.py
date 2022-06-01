@@ -1,4 +1,5 @@
 import gui
+import json
 import utils
 
 if __name__ == '__main__':
@@ -10,6 +11,9 @@ if __name__ == '__main__':
              details_l2_path='../_data/stats/details_l2.txt', 
              precision=4
              )
+
+  with open('../resources/version.json', 'r') as f:
+    utils.report('Running Morph Inspector version ' + str(json.load(f)), utils.ReportType.INFO)
 
   gui = gui.MorphInspectorGUI(settings)
   gui.start()
