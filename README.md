@@ -9,11 +9,5 @@ Face morphs are created through the use of neural networks for the purpose of fo
 ## Changelog
 A changelog of all versions can be found under [`changelog.md`](https://github.com/palmtrey/morphinspector/blob/main/docs/changelog.md).
 
-## Installation
-Morph Inspector is still under development - installation instructions to come.
-
-## Contributing
-Open issues can be found under [Issues](https://github.com/palmtrey/morphinspector/issues).
-
 ## License
-The Hawk Member Management System is licensed under the open source GNU General Public License v3.0. See [`LICENSE`](https://github.com/palmtrey/morph-inspector/blob/main/LICENSE) for more details.
+Morphinspector is licensed under the open source GNU General Public License v3.0. See [`LICENSE`](https://github.com/palmtrey/morph-inspector/blob/main/LICENSE) for more details.
