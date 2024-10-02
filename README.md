@@ -1,5 +1,5 @@
 # Morph Inspector
-A GUI application for inspecting face morphs created by Clarkson University's CAMEL research team.
+A GUI application for inspecting face morphs created for Clarkson University's CAMEL research team.
 
 ![](https://github.com/palmtrey/morphinspector/blob/main/docs/morph_inspector.png)
 
